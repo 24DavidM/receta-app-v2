@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  Image,
   ScrollView,
   StyleSheet,
   Text,
@@ -18,7 +19,7 @@ import { colors, fontSize, spacing } from "../../src/styles/theme";
 export default function EditarRecetaScreen() {
   const { id } = useLocalSearchParams();
   const { usuario } = useAuth();
-  const { recetas, actualizar } = useRecipes();
+  const { recetas, actualizar, seleccionarImagen, tomarFoto } = useRecipes();
   const router = useRouter();
 
   const receta = recetas.find((r) => r.id === id);
@@ -28,6 +29,7 @@ export default function EditarRecetaScreen() {
   const [ingrediente, setIngrediente] = useState("");
   const [ingredientes, setIngredientes] = useState<string[]>([]);
   const [cargando, setCargando] = useState(false);
+  const [imagenUri, setImagenUri] = useState<string | null>(null);
 
   // Cargar datos de la receta al iniciar
   useEffect(() => {
@@ -35,6 +37,10 @@ export default function EditarRecetaScreen() {
       setTitulo(receta.titulo);
       setDescripcion(receta.descripcion);
       setIngredientes(receta.ingredientes);
+      // No sobrescribimos si ya se seleccionó una nueva imagen
+      if (!imagenUri && receta.imagen_url) {
+        setImagenUri(receta.imagen_url);
+      }
     }
   }, [receta]);
 
@@ -85,7 +91,8 @@ export default function EditarRecetaScreen() {
       receta.id,
       titulo,
       descripcion,
-      ingredientes
+      ingredientes,
+      imagenUri || undefined
     );
     setCargando(false);
 
@@ -156,9 +163,31 @@ export default function EditarRecetaScreen() {
           ))}
         </View>
 
-        <Text style={styles.notaImagen}>
-          💡 Nota: La imagen no se puede cambiar por ahora
-        </Text>
+        {imagenUri ? (
+          <Image source={{ uri: imagenUri }} style={{ width: '100%', height: 200, borderRadius: 8, marginBottom: 12 }} />
+        ) : receta.imagen_url ? (
+          <Image source={{ uri: receta.imagen_url }} style={{ width: '100%', height: 200, borderRadius: 8, marginBottom: 12 }} />
+        ) : null}
+
+        <TouchableOpacity
+          style={[globalStyles.button, globalStyles.buttonSecondary]}
+          onPress={async () => {
+            const uri = await seleccionarImagen();
+            if (uri) setImagenUri(uri);
+          }}
+        >
+          <Text style={globalStyles.buttonText}>{imagenUri ? '� Cambiar Foto' : '📷 Seleccionar Foto'}</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[globalStyles.button, globalStyles.buttonSecondary, { marginTop: 8 }]}
+          onPress={async () => {
+            const uri = await tomarFoto();
+            if (uri) setImagenUri(uri);
+          }}
+        >
+          <Text style={globalStyles.buttonText}>{imagenUri ? '📸 Cambiar desde Cámara' : '📸 Tomar Foto'}</Text>
+        </TouchableOpacity>
 
         <TouchableOpacity
           style={[

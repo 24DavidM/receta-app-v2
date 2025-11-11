@@ -23,8 +23,20 @@ import {
 
 export default function CrearRecetaScreen() {
   const { usuario, esChef } = useAuth();
-  const { crear, seleccionarImagen } = useRecipes();
+  const { crear, seleccionarImagen, tomarFoto } = useRecipes();
   const router = useRouter();
+
+  const safeBack = () => {
+    try {
+      if ((router as any).canGoBack && (router as any).canGoBack()) {
+        router.back();
+      } else {
+        router.push("/(tabs)");
+      }
+    } catch (e) {
+      router.push("/(tabs)");
+    }
+  };
 
   const [titulo, setTitulo] = useState("");
   const [descripcion, setDescripcion] = useState("");
@@ -46,6 +58,13 @@ export default function CrearRecetaScreen() {
 
   const handleSeleccionarImagen = async () => {
     const uri = await seleccionarImagen();
+    if (uri) {
+      setImagenUri(uri);
+    }
+  };
+
+  const handleTomarFoto = async () => {
+    const uri = await tomarFoto();
     if (uri) {
       setImagenUri(uri);
     }
@@ -97,6 +116,12 @@ export default function CrearRecetaScreen() {
         <Text style={globalStyles.textSecondary}>
           Crea una cuenta de chef para poder publicar recetas
         </Text>
+        <TouchableOpacity
+          style={[globalStyles.button, globalStyles.buttonPrimary, { marginTop: 16 }]}
+          onPress={safeBack}
+        >
+          <Text style={globalStyles.buttonText}>Volver</Text>
+        </TouchableOpacity>
       </View>
     );
   }
@@ -166,6 +191,13 @@ export default function CrearRecetaScreen() {
           <Text style={globalStyles.buttonText}>
             {imagenUri ? "📷 Cambiar Foto" : "📷 Agregar Foto"}
           </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[globalStyles.button, globalStyles.buttonSecondary, { marginTop: 8 }]}
+          onPress={handleTomarFoto}
+        >
+          <Text style={globalStyles.buttonText}>{imagenUri ? "📸 Cambiar desde Cámara" : "📸 Tomar Foto"}</Text>
         </TouchableOpacity>
 
         {imagenUri && (
