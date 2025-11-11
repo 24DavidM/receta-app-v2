@@ -29,6 +29,25 @@ export default function HomeScreen() {
   const [refrescando, setRefrescando] = useState(false);
   const router = useRouter();
 
+  // Filtrado local para que el buscador funcione aunque la búsqueda remota falle
+  const busquedaLower = busqueda.trim().toLowerCase();
+  const recetasMostradas = busquedaLower
+    ? recetas.filter((item) => {
+        const titulo = (item.titulo || "").toLowerCase();
+        const descripcion = (item.descripcion || "").toLowerCase();
+        const ingredientes = (
+          Array.isArray(item.ingredientes)
+            ? item.ingredientes.join(" ")
+            : String(item.ingredientes || "")
+        ).toLowerCase();
+        return (
+          titulo.includes(busquedaLower) ||
+          descripcion.includes(busquedaLower) ||
+          ingredientes.includes(busquedaLower)
+        );
+      })
+    : recetas;
+
   const handleBuscar = () => {
     if (busqueda.trim()) {
       buscar(busqueda.trim().toLowerCase());
@@ -130,8 +149,8 @@ export default function HomeScreen() {
           style={{ marginTop: spacing.lg }}
         />
       ) : (
-        <FlatList
-          data={recetas}
+          <FlatList
+          data={recetasMostradas}
           keyExtractor={(item) => item.id}
           contentContainerStyle={{ padding: spacing.md }}
           refreshControl={
